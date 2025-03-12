@@ -1,0 +1,68 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  terraform:
+    name: 'Terraform'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      
+    - name: Setup Minikube
+      uses: medyagh/setup-minikube@master
+      
+    - name: Terraform Init
+      run: terraform init
+      working-directory: ./terraform
+      
+    - name: Terraform Plan
+      run: terraform plan
+      working-directory: ./terraform
+      
+    - name: Terraform Apply
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      run: terraform apply -auto-approve
+      working-directory: ./terraform
+        
+  deploy:
+    name: 'Deploy to Kubernetes'
+    needs: terraform
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      
+    - name: Setup Helm
+      uses: azure/setup-helm@v3
+      
+    - name: Deploy application
+      run: |
+        # Esperar a que los servicios estén disponibles
+        kubectl wait --for=condition=ready pod -l app=redis --timeout=180s -n redis-system
+        
+        # Obtener la información del servicio Redis
+        REDIS_HOST=$(kubectl get svc -n redis-system desafio-devops-redis -o jsonpath='{.spec.clusterIP}')
+        
+        # Actualizar el valor en values.yaml
+        sed -i "s/redis-system.desafio-devops-redis/$REDIS_HOST/g" ./helm/nginx-app/values.yaml
+        
+        # Crear namespace si no existe
+        kubectl create namespace nginx-system || true
+        
+        # Instalar o actualizar el Helm chart
+        helm upgrade --install nginx-app ./helm/nginx-app -n nginx-system
+        
+        # Configurar acceso local
+        MINIKUBE_IP=$(minikube ip)
+        echo "$MINIKUBE_IP nginx.local" | sudo tee -a /etc/hosts

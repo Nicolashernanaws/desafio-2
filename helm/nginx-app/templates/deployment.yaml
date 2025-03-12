@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-nginx
+  labels:
+    app: nginx
+    release: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount.desired }}
+  selector:
+    matchLabels:
+      app: nginx
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: nginx
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+      - name: nginx
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: html-content
+          mountPath: /usr/share/nginx/html
+        - name: nginx-config
+          mountPath: /etc/nginx/templates/
+        env:
+        - name: REDIS_HOST
+          value: {{ .Values.redis.host | quote }}
+        - name: REDIS_PORT
+          value: {{ .Values.redis.port | quote }}
+      volumes:
+      - name: html-content
+        configMap:
+          name: {{ .Release.Name }}-html-content
+      - name: nginx-config
+        configMap:
+          name: {{ .Release.Name }}-nginx-config

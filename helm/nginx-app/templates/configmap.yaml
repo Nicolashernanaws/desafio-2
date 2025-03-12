@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-html-content
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Hello World</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          margin: 0;
+          background-color: #f0f0f0;
+        }
+        .container {
+          text-align: center;
+          padding: 20px;
+          border-radius: 10px;
+          background-color: white;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+          color: #333;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>{{ .Values.content.message }}</h1>
+        <p>Desplegado con Helm en Kubernetes</p>
+      </div>
+    </body>
+    </html>
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-nginx-config
+data:
+  default.conf.template: |
+    server {
+      listen 80;
+      server_name localhost;
+
+      location / {
+        root /usr/share/nginx/html;
+        index index.html;
+      }
+
+      location /redis_status {
+        default_type text/plain;
+        return 200 "Redis disponible en $REDIS_HOST:$REDIS_PORT";
+      }
+    }
