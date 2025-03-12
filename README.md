@@ -35,4 +35,8 @@ desafio-2/
 │       └── ci-cd.yaml        
 ├── docs/                      
 │   └── architecture-diagram.png 
-└── README.md                  
+└── README.md
+
+echo "" >> README.md
+echo "## CI/CD Status" >> README.md
+echo "Este proyecto utiliza GitHub Actions para CI/CD." >> README.md                  
