@@ -37,6 +37,6 @@ desafio-2/
 │   └── architecture-diagram.png 
 └── README.md
 
-echo "" >> README.md
-echo "## CI/CD Status" >> README.md
-echo "Este proyecto utiliza GitHub Actions para CI/CD." >> README.md                  
+![image](https://github.com/user-attachments/assets/3550618b-373f-4804-9abe-e62d17547e5e)
+
+            
